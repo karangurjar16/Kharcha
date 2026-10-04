@@ -4,7 +4,7 @@
 
 **A little clearer every day.** Kharcha turns bank transaction SMS into a private spending ledger. It keeps the original message beside the parsed amount, so you can check the source, correct a name or category, and decide what belongs in your ledger.
 
-This repository contains a working Expo app and a small Render backup API. The app works without an account or backend. The API is used only when you opt into encrypted backup.
+This repository contains a working Expo app and a small backup API you can deploy to Vercel. The app works without an account or backend. The API is used only when you opt into encrypted backup.
 
 ## What you can do
 
@@ -13,7 +13,7 @@ This repository contains a working Expo app and a small Render backup API. The a
 | Add and edit entries, assign categories, set budgets, and view insights | Yes | Yes | Yes |
 | Paste a bank SMS and review the parsed entry | Yes | Yes | Yes |
 | Read allowlisted bank SMS from the device inbox | Yes, with `READ_SMS` permission | No platform API | No browser API |
-| Optional encrypted backup to Render | Yes | Yes | Not enabled |
+| Optional encrypted backup to your Vercel API | Yes | Yes | Not enabled |
 
 The Android reader uses a small local Expo module. It reads only messages from enabled sender IDs. Common OTP and promotion patterns are filtered; parsing is heuristic, so review entries against your bank records. The app never asks for a bank password or login.
 
@@ -29,7 +29,7 @@ cp .env.example .env
 npm start
 ```
 
-For a quick manual-entry preview, press `w` for web or open the app in Expo Go. No Render service is needed. The web preview keeps entries in that browser's local storage; clearing site data removes them. Installed iOS and Android apps use SQLite.
+For a quick manual-entry preview, press `w` for web or open the app in Expo Go. No backend is needed. The web preview keeps entries in that browser's local storage; clearing site data removes them. Installed iOS and Android apps use SQLite.
 
 ### Read SMS on Android
 
@@ -51,20 +51,21 @@ The first EAS run may ask you to connect or create an Expo project and configure
 
 For iOS, use manual entry or paste a bank SMS. iOS does not expose general inbox-reading access to third-party apps.
 
-## Add optional Render backup
+## Add optional Vercel backup
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/cneuralnetwork/kharcha)
+The app is useful without a backend. If you want cross-device recovery, deploy the API in [`api/`](api) to [Vercel](https://vercel.com) and point it at a hosted Postgres database such as [Neon](https://neon.tech). Vercel runs the Fastify app as a single [Vercel Function](https://vercel.com/docs/frameworks/backend/fastify); [`api/vercel.json`](api/vercel.json) selects the Fastify preset and the `cle1` region, next to Neon's `us-east-2`. Change the region if your database lives elsewhere.
 
-The app is useful without Render. If you want cross-device recovery, the button opens this repository's [Render Blueprint](render.yaml) in your Render account. It proposes a free API web service and a paid, persistent `0.1c-256mb` Postgres database in Singapore. **Review the database cost before approving the deploy.** [Render's free Postgres expires after 30 days](https://render.com/docs/free), so it is unsuitable as the only copy of a real backup.
+1. Create a Postgres database and copy its **pooled** connection string. For Neon, use the `-pooler` host and end the URL with `?sslmode=verify-full&channel_binding=require`.
+2. In Vercel, choose **Add New → Project**, import this repository, and set **Root Directory** to `api`. The Fastify framework preset is detected automatically.
+3. Under **Settings → Environment Variables**, add `DATABASE_URL` with that connection string. Optionally add `CORS_ORIGINS` (comma-separated) for a browser client. `PORT` is not needed on Vercel.
+4. Deploy. The API creates its table on first start. Visit `https://<your-project>.vercel.app/healthz`; it should return `{"ok":true}`.
+5. Set `EXPO_PUBLIC_BACKUP_API_URL=https://<your-project>.vercel.app` in `mobile/.env` for local runs, and in the `env` blocks of [`mobile/eas.json`](mobile/eas.json) for EAS builds (EAS does not upload the git-ignored `.env`).
+6. Restart Metro, or rebuild the installed app. `EXPO_PUBLIC_` values are compiled into the client. Never put a database password or secret there.
+7. In **You → Encrypted backup**, create a recovery code, store it privately, then tap **Back up now**. To restore on another installed app, enter that code in the same screen.
 
-1. Click **Deploy to Render**, sign in, choose your workspace, and review the proposed web service and database.
-2. Approve the Blueprint if the cost works for you. Render sets `DATABASE_URL` from the database and starts the API. The API creates its table at startup.
-3. Visit `https://<your-service>.onrender.com/healthz`; it should return `{"ok":true}`.
-4. In `mobile/.env`, set `EXPO_PUBLIC_BACKUP_API_URL=https://<your-service>.onrender.com`.
-5. Restart Metro, or rebuild the installed app. `EXPO_PUBLIC_` values are compiled into the client. Never put a database password or secret there.
-6. In **You → Encrypted backup**, create a recovery code, store it privately, then tap **Back up now**. To restore on another installed app, enter that code in the same screen.
+Vercel limits request bodies to 4.5 MB, so the API accepts encrypted snapshots up to about 4.4 MB of ciphertext.
 
-The Blueprint leaves automatic deploys off, so changes pushed to this public repository will not update your service unexpectedly. Deploy a newer commit from your Render dashboard when you choose to update.
+To deploy from a terminal instead, run `npx vercel@latest` inside `api/` and add the variables with `npx vercel@latest env add DATABASE_URL`.
 
 The recovery code contains both the access token and encryption key. Whoever has it can restore the snapshot. Losing it means the server cannot decrypt your backup. The API stores ciphertext only, along with a token hash, backup ID, version, and timestamp. Remote deletion is available in the app. See [PRIVACY.md](PRIVACY.md) for the full data flow.
 
@@ -92,8 +93,8 @@ flowchart LR
   Review --> Ledger
   Ledger --> Insights[Home, insights, budgets]
   Ledger -->|Explicit backup only| AES[AES-GCM on device]
-  AES --> API[Render API]
-  API --> DB[(Render Postgres ciphertext)]
+  AES --> API[Vercel API]
+  API --> DB[(Postgres ciphertext)]
 ```
 
 The parser is intentionally conservative. It requires a debit or credit signal and an amount, tries to identify the merchant, and gives uncertain reads to the review inbox. High-confidence reads can be auto-added if that setting is on. A message's raw body remains attached to its entry. The API never parses SMS or calculates spending.
@@ -108,7 +109,7 @@ The parser is intentionally conservative. It requires a debit or credit signal a
 | [`mobile/src/lib/database.web.ts`](mobile/src/lib/database.web.ts) | Browser-local preview storage |
 | [`mobile/modules/kharcha-sms`](mobile/modules/kharcha-sms) | Android allowlisted inbox reader |
 | [`mobile/src/lib/backup.ts`](mobile/src/lib/backup.ts) | On-device encryption and recovery code |
-| [`api/src`](api/src) | Render backup HTTP API and Postgres store |
+| [`api/src`](api/src) | Backup HTTP API (Vercel Function) and Postgres store |
 | [`docs/brand`](docs/brand) | Ready-to-use promotional art and generator |
 
 ## Build and verify

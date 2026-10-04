@@ -5,6 +5,7 @@
 **/.env
 **/.env.local
 **/.env.*.local
+**/.vercel/
 **/coverage/
 mobile/android/
 mobile/ios/

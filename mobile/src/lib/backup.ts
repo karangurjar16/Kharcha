@@ -26,7 +26,7 @@ function recoveryCode(credentials: Credentials): string {
 }
 
 function endpoint(id: string): string {
-  if (!apiUrl || !apiUrl.startsWith('https://')) throw new Error('Set EXPO_PUBLIC_BACKUP_API_URL to your HTTPS Render API URL.');
+  if (!apiUrl || !apiUrl.startsWith('https://')) throw new Error('Set EXPO_PUBLIC_BACKUP_API_URL to your HTTPS Vercel API URL.');
   return `${apiUrl}/v1/backups/${id}`;
 }
 
@@ -68,6 +68,7 @@ export async function uploadBackup(snapshot: Snapshot): Promise<void> {
     method: 'PUT', headers, body: JSON.stringify({ version, ciphertext }),
   });
   if (response.status === 409) throw new Error('The backup changed on another device. Restore it before uploading again.');
+  if (response.status === 413) throw new Error('This backup is larger than the server accepts (about 4 MB).');
   if (!response.ok) throw new Error('Backup could not be saved. Try again.');
 }
 

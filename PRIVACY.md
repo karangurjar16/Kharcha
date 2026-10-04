@@ -14,13 +14,13 @@ On iOS and Android, transactions, source SMS text for accepted transactions, bud
 
 ## Optional backup
 
-Backup is off until the user creates a recovery code and taps **Back up now**. The app encrypts a snapshot locally with AES-GCM. The Render API stores the ciphertext, a random backup ID, a hash of the access token, a version number, and timestamps. It does not receive the encryption key or plaintext ledger. The recovery code contains the ID, access token, and key, so anyone who has it can retrieve and decrypt the backup. Keep it private. The app stores a copy in the operating system's secure storage.
+Backup is off until the user creates a recovery code and taps **Back up now**. The app encrypts a snapshot locally with AES-GCM. The backup API (deployed on Vercel) stores the ciphertext, a random backup ID, a hash of the access token, a version number, and timestamps. It does not receive the encryption key or plaintext ledger. The recovery code contains the ID, access token, and key, so anyone who has it can retrieve and decrypt the backup. Keep it private. The app stores a copy in the operating system's secure storage.
 
 The backend keeps one current snapshot per backup ID until the user deletes it or the operator removes it. Deleting the remote backup does not erase the local ledger. Restoring a backup replaces the local ledger after confirmation.
 
 ## Network and platform services
 
-The installed app contacts the configured Render API only for explicit backup actions. Expo development/build services and the app store may process ordinary build, distribution, and crash information under their own terms. This repository does not include an in-app telemetry service.
+The installed app contacts the configured backup API only for explicit backup actions. Vercel, your database provider, Expo development/build services, and the app store may process ordinary build, distribution, and crash information under their own terms. This repository does not include an in-app telemetry service.
 
 ## Contact
 
