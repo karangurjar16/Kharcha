@@ -7,13 +7,13 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BACKUP_API_URL": "https://kaan-kharcha-api.vercel.app"
+        "EXPO_PUBLIC_BACKUP_API_URL": "https://kharcha-backup-api.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_BACKUP_API_URL": "https://kaan-kharcha-api.vercel.app"
+        "EXPO_PUBLIC_BACKUP_API_URL": "https://kharcha-backup-api.onrender.com"
       }
     }
   }

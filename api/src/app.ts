@@ -5,9 +5,6 @@ import type { BackupStore } from './store.js';
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const tokenPattern = /^[A-Za-z0-9_-]{43}$/;
 const ciphertextPattern = /^[A-Za-z0-9+/]+={0,2}$/;
-// Vercel Functions reject request bodies over 4.5 MB before they reach the app.
-const maxCiphertextLength = 4_400_000;
-const bodyLimit = 4_500_000;
 
 function authorized(storedHash: string, authorization: unknown): boolean {
   if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) return false;
@@ -24,12 +21,12 @@ function validBackup(id: string, token: string, body: BackupPayload | undefined)
   if (!idPattern.test(id) || !tokenPattern.test(token) || !body) return false;
   const { version, ciphertext } = body;
   return Number.isSafeInteger(version) && version! >= 0 &&
-    typeof ciphertext === 'string' && ciphertext.length <= maxCiphertextLength &&
+    typeof ciphertext === 'string' && ciphertext.length <= 5_000_000 &&
     ciphertext.length >= 32 && ciphertextPattern.test(ciphertext);
 }
 
 export function buildApp(store: BackupStore, allowedOrigins: string[] = []) {
-  const app = Fastify({ bodyLimit, logger: false });
+  const app = Fastify({ bodyLimit: 5_500_000, logger: false });
 
   app.addHook('onRequest', async (request, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff');

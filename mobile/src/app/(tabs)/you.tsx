@@ -27,7 +27,7 @@ export default function You() {
     {senders.map(sender => <Pressable key={sender.address} accessibilityRole="button" accessibilityLabel={`Edit ${sender.label}`} onPress={() => router.push({ pathname: '/sender', params: { address: sender.address } })} style={{ paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: p.line, flexDirection: 'row', alignItems: 'center' }}><View style={{ flex: 1 }}><Text style={{ fontFamily: fonts.bodyMedium, color: p.ink }}>{sender.label}</Text><Caption>{sender.address} · {sender.enabled ? 'Reading' : 'Paused'}</Caption></View><Icon name="chevron" color={p.muted} size={17} /></Pressable>)}
     <View style={{ marginTop: 32, marginBottom: 9 }}><SectionTitle>Your data</SectionTitle></View>
     <Menu title="Paste a bank SMS" detail="Parse a message you choose" icon="sms" onPress={() => router.push('/import')} />
-    <Menu title="Encrypted backup" detail="Optional · stored on your Vercel API" icon="cloud" onPress={() => router.push('/backup')} />
+    <Menu title="Encrypted backup" detail="Optional · stored on your Render API" icon="cloud" onPress={() => router.push('/backup')} />
     <View style={{ height: 24 }} />
   </Screen>;
 }

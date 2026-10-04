@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: kharcha-backup-api
+    runtime: node
+    # Same area as the Neon database (AWS us-east-2, Ohio).
+    region: ohio
+    plan: free
+    autoDeployTrigger: commit
+    rootDir: api
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22.21.1
+      # Neon pooled connection string; Render asks for it when the Blueprint is created.
+      - key: DATABASE_URL
+        sync: false

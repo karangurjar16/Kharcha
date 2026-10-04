@@ -23,11 +23,11 @@ export default function Backup() {
     finally { setBusy(false); }
   }
   if (Platform.OS === 'web') return <Screen><ScreenHead title="Encrypted backup" back /><Body muted>Encrypted backup is available in the installed iOS and Android apps. Your web ledger remains on this browser.</Body></Screen>;
-  return <Screen><ScreenHead title="Encrypted backup" back /><Body muted>Your phone encrypts the ledger before upload. The backup API sees ciphertext, never your transactions or messages.</Body>
+  return <Screen><ScreenHead title="Encrypted backup" back /><Body muted>Your phone encrypts the ledger before upload. The Render API sees ciphertext, never your transactions or messages.</Body>
     <View style={{ marginTop: 30, gap: 13 }}><SectionTitle>Your recovery code</SectionTitle>
       {code ? <Pressable accessibilityRole="button" accessibilityLabel="Copy recovery code" onPress={() => void Clipboard.setStringAsync(code).then(() => showMessage('Copied', 'Store this code somewhere private.'))} style={{ backgroundColor: p.surface, padding: 15, borderRadius: 12 }}><Text selectable style={{ color: p.ink, fontFamily: fonts.monoRegular, fontSize: 12, lineHeight: 20 }}>{code}</Text><Caption style={{ marginTop: 9 }}>Tap to copy</Caption></Pressable> : <Action title="Create a recovery code" onPress={() => void run(async () => { setCode(await enableBackup()); }, 'Your code is ready. Copy and store it safely.')} disabled={busy} />}
       <Note>Anyone with this code can restore your backup. We cannot recover it if you lose it. A new upload replaces the previous encrypted snapshot.</Note>
-      {code ? <Action title={busy ? 'Working…' : 'Back up now'} onPress={() => void run(async () => { await uploadBackup(await exportSnapshot()); }, 'Encrypted backup saved.')} disabled={busy} /> : null}
+      {code ? <Action title={busy ? 'Working…' : 'Back up now'} onPress={() => void run(async () => { await uploadBackup(await exportSnapshot()); }, 'Encrypted backup saved on Render.')} disabled={busy} /> : null}
     </View>
     <View style={{ marginTop: 35, gap: 13 }}><SectionTitle>Restore on this phone</SectionTitle><Field label="Recovery code" value={input} onChangeText={setInput} placeholder="kharcha1.…" autoCapitalize="none" />
       <Action title="Restore backup" variant="secondary" disabled={busy} onPress={() => confirmAction('Replace your ledger?', 'Restoring replaces entries, budgets, and sender rules on this phone.', 'Restore', () => void run(async () => { await restore(await downloadBackup(input)); router.back(); }, 'Your ledger was restored.'))} />
